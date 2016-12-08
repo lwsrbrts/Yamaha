@@ -1,6 +1,6 @@
 ﻿Import-Module -Name .\Yamaha.ps1 -Force
 
-$Endpoint = "192.168.1.149"
+$Endpoint = "192.168.1.6"
 
 $Receiver = [Yamaha]::new($Endpoint)
 

@@ -89,12 +89,12 @@ Class Yamaha : ErrorHandler {
         Switch ($State) {
             $true {
                 If ($this.PowerOn -eq $true) { Throw "The receiver is already on." }
-                Else { $Body = '<YAMAHA_AV cmd="PUT"><System><Power_Control><Power>On</Power></Power_Control></System></YAMAHA_AV>' }
+                Else { $Body = '<YAMAHA_AV cmd="PUT"><Main_Zone><Power_Control><Power>On</Power></Power_Control></Main_Zone></YAMAHA_AV>' }
                 Break
             }
             $false {
                 If ($this.PowerOn -eq $false) { Throw "The receiver is already off." }
-                Else { $Body = '<YAMAHA_AV cmd="PUT"><System><Power_Control><Power>Standby</Power></Power_Control></System></YAMAHA_AV>' }
+                Else { $Body = '<YAMAHA_AV cmd="PUT"><Main_Zone><Power_Control><Power>Standby</Power></Power_Control></Main_Zone></YAMAHA_AV>' }
                 Break
             }
         }
