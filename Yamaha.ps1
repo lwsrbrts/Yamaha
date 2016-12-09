@@ -138,11 +138,10 @@ Class Yamaha : ErrorHandler {
         $this.SetState()
     }
 
-
     # Set the volume on the receiver.
     [void] SetVolume([int] $VolumeLevel) {
         # Refresh the state of the receiver, who knows what's changed.
-        $this.SetState() 
+        $this.SetState()
 
         If ($this.PowerOn -eq $false) { Throw "The receiver must be powered on first." }
         If ($VolumeLevel % 5 -ne 0) { Throw "VolumeLevel must be divisible by 5." }
