@@ -22,6 +22,8 @@ Class Yamaha : ErrorHandler {
     [ValidateRange(-800,-200)][int] $VolumeLevel
     [ipaddress] $IPAddress
     [System.Xml.XmlDocument] $Status
+    [psobject] $Inputs
+    [string] $CurrentInput
 
     ###############
     # CONSTRUCTOR #
@@ -51,6 +53,8 @@ Class Yamaha : ErrorHandler {
         $this.PowerOn = $this.ConvertState($this.Status.YAMAHA_AV.Main_Zone.Basic_Status.Power_Control.Power)
         $this.MuteOn = $this.ConvertState($this.Status.YAMAHA_AV.Main_Zone.Basic_Status.Volume.Mute)
         $this.VolumeLevel = $this.Status.YAMAHA_AV.Main_Zone.Basic_Status.Volume.Lvl.Val
+        $this.CurrentInput = $this.Status.YAMAHA_AV.Main_Zone.Basic_Status.Input.Input_Sel
+        $this.GetInputs()
     }
 
     hidden [System.Xml.XmlDocument] GetNetworkStandbyStatus() {
@@ -158,5 +162,40 @@ Class Yamaha : ErrorHandler {
         }
     }
 
+    hidden [void] GetInputs() {
+        # Refresh the state of the receiver, who knows what's changed.
+        $Body = '<YAMAHA_AV cmd="GET"><System><Config>GetParam</Config></System></YAMAHA_AV>'
+        $State = $null
+
+        Try {
+            $State = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+        }
+        Catch {
+            $this.ReturnError('GetInputs(): An error occurred while getting inputs.'+"`n"+$_)
+        }
+
+        $AVInputs = @{}
+        Foreach ($AVInput in $State.YAMAHA_AV.System.Config.Name.Input.ChildNodes) {
+            $AVInputs.Add($AVInput.Name.Replace('_',''), $AVInput.InnerText) # Clean up the input names, they don't have underscores!
+        }
+
+        $this.Inputs = $AVInputs
+    }
+
+    [void] SetInput([string] $InputName) {
+        # Refresh the state of the receiver, who knows what's changed.
+
+        If ($InputName -notin $this.Inputs.Keys) { Throw "The input name specified (`"$InputName`") is not a valid input on the receiver. Check the .Inputs property for a list."  }
+
+        $Body = "<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Input><Input_Sel>$InputName</Input_Sel></Input></Main_Zone></YAMAHA_AV>"
+
+        Try {
+            $State = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+        }
+        Catch {
+            $this.ReturnError('SetInput([string] $InputName): An error occurred while setting the input.'+"`n"+$_)
+        }
+        $this.SetState()
+    }
 
 }

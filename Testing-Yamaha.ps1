@@ -17,6 +17,6 @@ $Receiver.SetMute($false)
 
 $Receiver.SetVolume
 
-$State = $Receiver.GetMainZoneStatus()
+$Receiver.GetInputs()
 
-$State.YAMAHA_AV
+$Receiver.SetInput('HDMI3')
