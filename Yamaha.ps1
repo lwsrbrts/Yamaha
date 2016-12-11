@@ -1,4 +1,21 @@
-﻿Class ErrorHandler {
+﻿Enum Volume {
+    v1 = -800
+    v2 = -750
+    v3 = -700
+    v4 = -650
+    v5 = -600
+    v6 = -550
+    v7 = -500
+    v8 = -450
+    v9 = -400
+    v10 = -350
+    v11 = -300
+    v12 = -250
+    v13 = -200
+}
+
+
+Class ErrorHandler {
     # Base class defining a method for error handling which we can extend
     # Return errors and terminates execution
 
@@ -19,7 +36,7 @@ Class Yamaha : ErrorHandler {
 
     [bool] $PowerOn
     [bool] $MuteOn
-    [ValidateRange(-800,-200)][int] $VolumeLevel
+    [ValidateRange(-800,-200)][Volume] $VolumeLevel
     [ipaddress] $IPAddress
     [System.Xml.XmlDocument] $Status
     [psobject] $Inputs
@@ -143,15 +160,15 @@ Class Yamaha : ErrorHandler {
     }
 
     # Set the volume on the receiver.
-    [void] SetVolume([int] $VolumeLevel) {
+    [void] SetVolume([Volume] $VolumeLevel) {
         # Refresh the state of the receiver, who knows what's changed.
         $this.SetState()
 
         If ($this.PowerOn -eq $false) { Throw "The receiver must be powered on first." }
-        If ($VolumeLevel % 5 -ne 0) { Throw "VolumeLevel must be divisible by 5." }
-        $this.VolumeLevel = $VolumeLevel
+        #If ($VolumeLevel % 5 -ne 0) { Throw "VolumeLevel must be divisible by 5." }
+        $this.VolumeLevel = $VolumeLevel.value__
 
-        $Body = "'<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Volume><Lvl><Val>$VolumeLevel</Val><Exp>1</Exp><Unit>dB</Unit></Lvl></Volume></Main_Zone></YAMAHA_AV>"
+        $Body = "'<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Volume><Lvl><Val>$($VolumeLevel.value__)</Val><Exp>1</Exp><Unit>dB</Unit></Lvl></Volume></Main_Zone></YAMAHA_AV>"
         $State = $null
 
         Try {
@@ -160,6 +177,7 @@ Class Yamaha : ErrorHandler {
         Catch {
             $this.ReturnError('SetVolume([int] $VolumeLevel): An error occurred while setting the volume.'+"`n"+$_)
         }
+        $this.SetState()
     }
 
     hidden [void] GetInputs() {

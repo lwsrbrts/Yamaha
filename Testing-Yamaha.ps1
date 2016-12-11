@@ -6,8 +6,8 @@ $Receiver = [Yamaha]::new($Endpoint)
 
 $Receiver
 
-$Receiver.SetVolume(-555)
 $Receiver.SetVolume(-900)
+$Receiver.SetVolume('v8')
 
 $Receiver.SetPower($true)
 $Receiver.SetPower($false)
