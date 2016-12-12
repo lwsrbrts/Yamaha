@@ -2,7 +2,7 @@
 
 $Endpoint = "192.168.1.6"
 
-$Receiver = [Yamaha]::new($Endpoint)
+$R = [Yamaha]::new($Endpoint)
 
 $Receiver
 

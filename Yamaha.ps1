@@ -109,12 +109,12 @@ Class Yamaha : ErrorHandler {
 
         Switch ($State) {
             $true {
-                If ($this.PowerOn -eq $true) { Throw "The receiver is already on." }
+                If ($this.PowerOn -eq $true) { $this.ReturnWarning("The receiver is already on."); Return }
                 Else { $Body = '<YAMAHA_AV cmd="PUT"><Main_Zone><Power_Control><Power>On</Power></Power_Control></Main_Zone></YAMAHA_AV>' }
                 Break
             }
             $false {
-                If ($this.PowerOn -eq $false) { Throw "The receiver is already off." }
+                If ($this.PowerOn -eq $false) { $this.ReturnWarning("The receiver is already off."); Return }
                 Else { $Body = '<YAMAHA_AV cmd="PUT"><Main_Zone><Power_Control><Power>Standby</Power></Power_Control></Main_Zone></YAMAHA_AV>' }
                 Break
             }
@@ -133,18 +133,18 @@ Class Yamaha : ErrorHandler {
     [void] SetMute([bool] $State) {
         # Refresh the state of the receiver, who knows what's changed.
         $this.SetState()
-        If ($this.PowerOn -eq $false) { Throw "The receiver must be powered on first." }
+        If ($this.PowerOn -eq $false) { $this.ReturnWarning("The receiver must be powered on first."); Return }
 
         $Body = $null
 
         Switch ($State) {
             $true {
-                If ($this.MuteOn -eq $true) { Throw "The receiver is already muted." }
+                If ($this.MuteOn -eq $true) { $this.ReturnWarning("The receiver is already muted."); Return }
                 Else { $Body = '<YAMAHA_AV cmd="PUT"><Main_Zone><Volume><Mute>On</Mute></Volume></Main_Zone></YAMAHA_AV>' }
                 Break
             }
             $false {
-                If ($this.MuteOn -eq $false) { Throw "The receiver is not currently muted." }
+                If ($this.MuteOn -eq $false) { $this.ReturnWarning("The receiver is not currently muted."); Return }
                 Else { $Body = '<YAMAHA_AV cmd="PUT"><Main_Zone><Volume><Mute>Off</Mute></Volume></Main_Zone></YAMAHA_AV>' }
                 Break
             }
@@ -164,7 +164,7 @@ Class Yamaha : ErrorHandler {
         # Refresh the state of the receiver, who knows what's changed.
         $this.SetState()
 
-        If ($this.PowerOn -eq $false) { Throw "The receiver must be powered on first." }
+        If ($this.PowerOn -eq $false) { $this.ReturnWarning("The receiver must be powered on first."); Return }
         #If ($VolumeLevel % 5 -ne 0) { Throw "VolumeLevel must be divisible by 5." }
         $this.VolumeLevel = $VolumeLevel.value__
 
@@ -203,7 +203,7 @@ Class Yamaha : ErrorHandler {
     [void] SetInput([string] $InputName) {
         # Refresh the state of the receiver, who knows what's changed.
 
-        If ($InputName -notin $this.Inputs.Keys) { Throw "The input name specified (`"$InputName`") is not a valid input on the receiver. Check the .Inputs property for a list."  }
+        If ($InputName -notin $this.Inputs.Keys) { $this.ReturnWarning("The input name specified (`"$InputName`") is not a valid input on the receiver. Check the .Inputs property for a list."); Return }
 
         $Body = "<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Input><Input_Sel>$InputName</Input_Sel></Input></Main_Zone></YAMAHA_AV>"
 
