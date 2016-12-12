@@ -14,6 +14,15 @@
     v13 = -200
 }
 
+Enum CursorControl {
+    Up
+    Down
+    Left
+    Right
+    Sel
+    Return
+}
+
 Class ErrorHandler {
     # Base class defining a method for error handling which we can extend
     # Return errors and terminates execution
@@ -445,6 +454,21 @@ Class Yamaha : ErrorHandler {
             $this.ReturnError('SetAdaptiveDRC([bool] $State): An error occurred while setting Adaptive DRC mode on the receiver.'+"`n"+$_)
         }
         $this.SetState()
+    }
+
+    # Send actions to the receiver (like using the remote)
+    [void] SendAction([CursorControl] $Action) {
+        # Refresh the state of the receiver, who knows what's changed.
+        If ($this.PowerOn -eq $false) { $this.ReturnWarning("The receiver must be powered on first."); Return }
+
+        $Body = "<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Cursor_Control><Cursor>$Action</Cursor></Cursor_Control></Main_Zone></YAMAHA_AV>"
+
+        Try {
+            $Result = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+        }
+        Catch {
+            $this.ReturnError('SendAction([CursorControl] $Action): An error occurred while sending the action to the receiver.'+"`n"+$_)
+        }
     }
 
 }
