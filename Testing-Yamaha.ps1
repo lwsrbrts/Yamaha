@@ -25,3 +25,4 @@ $R.SetTreble(15) # Set the Treble level to 1.5dB - ranged as -60 to +60
 
 $R.SetPureDirect($true) # Turn on Pure Direct mode
 $R.SetPureDirect($false) # Turn off Pure Direct mode
+

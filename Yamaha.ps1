@@ -33,17 +33,17 @@ Class Yamaha : ErrorHandler {
     # PROPERTIES #
     ##############
 
+    [ipaddress] $IPAddress
     [bool] $PowerOn
     [bool] $MuteOn
+    [string] $CurrentInput
     [ValidateRange(-800,-200)][Volume] $VolumeLevel
     [ValidateRange(-60,60)][int] $SubTrimLevel
     [ValidateRange(-60,60)][int] $BassLevel
     [ValidateRange(-60,60)][int] $TrebleLevel
     [bool] $PureDirectOn
-    [ipaddress] $IPAddress
     [System.Xml.XmlDocument] $Status
     [psobject] $Inputs
-    [string] $CurrentInput
 
     ###############
     # CONSTRUCTOR #
@@ -309,6 +309,5 @@ Class Yamaha : ErrorHandler {
         }
         $this.SetState()
     }
-
 
 }
