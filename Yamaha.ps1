@@ -14,7 +14,6 @@
     v13 = -200
 }
 
-
 Class ErrorHandler {
     # Base class defining a method for error handling which we can extend
     # Return errors and terminates execution
@@ -37,6 +36,10 @@ Class Yamaha : ErrorHandler {
     [bool] $PowerOn
     [bool] $MuteOn
     [ValidateRange(-800,-200)][Volume] $VolumeLevel
+    [ValidateRange(-60,60)][int] $SubTrimLevel
+    [ValidateRange(-60,60)][int] $BassLevel
+    [ValidateRange(-60,60)][int] $TrebleLevel
+    [bool] $PureDirectOn
     [ipaddress] $IPAddress
     [System.Xml.XmlDocument] $Status
     [psobject] $Inputs
@@ -71,6 +74,10 @@ Class Yamaha : ErrorHandler {
         $this.MuteOn = $this.ConvertState($this.Status.YAMAHA_AV.Main_Zone.Basic_Status.Volume.Mute)
         $this.VolumeLevel = $this.Status.YAMAHA_AV.Main_Zone.Basic_Status.Volume.Lvl.Val
         $this.CurrentInput = $this.Status.YAMAHA_AV.Main_Zone.Basic_Status.Input.Input_Sel
+        $this.SubTrimLevel = $this.Status.YAMAHA_AV.Main_Zone.Basic_Status.Volume.Subwoofer_Trim.Val
+        $this.BassLevel = $this.Status.YAMAHA_AV.Main_Zone.Basic_Status.Sound_Video.Tone.Bass.Val
+        $this.TrebleLevel = $this.Status.YAMAHA_AV.Main_Zone.Basic_Status.Sound_Video.Tone.Treble.Val
+        $this.PureDirectOn = $this.ConvertState($this.Status.YAMAHA_AV.Main_Zone.Basic_Status.Sound_Video.Pure_Direct.Mode)
         $this.GetInputs()
     }
 
@@ -165,7 +172,7 @@ Class Yamaha : ErrorHandler {
         $this.SetState()
 
         If ($this.PowerOn -eq $false) { $this.ReturnWarning("The receiver must be powered on first."); Return }
-        #If ($VolumeLevel % 5 -ne 0) { Throw "VolumeLevel must be divisible by 5." }
+        If ($VolumeLevel % 5 -ne 0) { $this.ReturnWarning("VolumeLevel must be divisible by 5."); Return }
         $this.VolumeLevel = $VolumeLevel.value__
 
         $Body = "'<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Volume><Lvl><Val>$($VolumeLevel.value__)</Val><Exp>1</Exp><Unit>dB</Unit></Lvl></Volume></Main_Zone></YAMAHA_AV>"
@@ -215,5 +222,93 @@ Class Yamaha : ErrorHandler {
         }
         $this.SetState()
     }
+
+    [void] SetSubTrim([int] $SubTrimLevel) {
+        # Refresh the state of the receiver, who knows what's changed.
+        $this.SetState()
+
+        If ($this.PowerOn -eq $false) { $this.ReturnWarning("The receiver must be powered on first."); Return }
+        If ($SubTrimLevel % 5 -ne 0) { $this.ReturnWarning("SubTrimLevel must be divisible by 5."); Return }
+        $this.SubTrimLevel = $SubTrimLevel
+
+        $Body = "'<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Volume><Subwoofer_Trim><Val>$($this.SubTrimLevel)</Val><Exp>1</Exp><Unit>dB</Unit></Subwoofer_Trim></Volume></Main_Zone></YAMAHA_AV>"
+
+        Try {
+            $State = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+        }
+        Catch {
+            $this.ReturnError('SetSubTrim([int] $SubTrimLevel): An error occurred while setting the subwoofer trim level.'+"`n"+$_)
+        }
+        $this.SetState()
+    }
+
+    [void] SetBass([int] $BassLevel) {
+        # Refresh the state of the receiver, who knows what's changed.
+        $this.SetState()
+
+        If ($this.PowerOn -eq $false) { $this.ReturnWarning("The receiver must be powered on first."); Return }
+        If ($BassLevel % 5 -ne 0) { $this.ReturnWarning("BassLevel must be divisible by 5."); Return }
+        $this.BassLevel = $BassLevel
+
+        $Body = "'<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Sound_Video><Tone><Bass><Val>$($this.BassLevel)</Val><Exp>1</Exp><Unit>dB</Unit></Bass></Tone></Sound_Video></Main_Zone></YAMAHA_AV>"
+
+        Try {
+            $State = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+        }
+        Catch {
+            $this.ReturnError('SetBass([int] $BassLevel): An error occurred while setting the bass level.'+"`n"+$_)
+        }
+        $this.SetState()
+    }
+
+    [void] SetTreble([int] $TrebleLevel) {
+        # Refresh the state of the receiver, who knows what's changed.
+        $this.SetState()
+
+        If ($this.PowerOn -eq $false) { $this.ReturnWarning("The receiver must be powered on first."); Return }
+        If ($TrebleLevel % 5 -ne 0) { $this.ReturnWarning("TrebleLevel must be divisible by 5."); Return }
+        $this.TrebleLevel = $TrebleLevel
+
+        $Body = "'<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Sound_Video><Tone><Treble><Val>$($this.TrebleLevel)</Val><Exp>1</Exp><Unit>dB</Unit></Treble></Tone></Sound_Video></Main_Zone></YAMAHA_AV>"
+
+        Try {
+            $State = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+        }
+        Catch {
+            $this.ReturnError('SetTreble([int] $TrebleLevel): An error occurred while setting the treble level.'+"`n"+$_)
+        }
+        $this.SetState()
+    }
+
+    # Set Pure Direct on or off ($true or $false)
+    [void] SetPureDirect([bool] $State) {
+        # Refresh the state of the receiver, who knows what's changed.
+        $this.SetState()
+        If ($this.PowerOn -eq $false) { $this.ReturnWarning("The receiver must be powered on first."); Return }
+
+        $Body = $null
+
+        Switch ($State) {
+            $true {
+                If ($this.PureDirectOn -eq $true) { $this.ReturnWarning("Pure Direct mode is already on."); Return }
+                Else { $Body = "'<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Sound_Video><Pure_Direct><Mode>On</Mode></Pure_Direct></Sound_Video></Main_Zone></YAMAHA_AV>" }
+                Break
+            }
+            $false {
+                If ($this.PureDirectOn -eq $false) { $this.ReturnWarning("Pure Direct mode is already off."); Return }
+                Else { $Body = "'<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Sound_Video><Pure_Direct><Mode>Off</Mode></Pure_Direct></Sound_Video></Main_Zone></YAMAHA_AV>" }
+                Break
+            }
+        }
+
+        Try {
+            $Result = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+        }
+        Catch {
+            $this.ReturnError('SetPureDirect([bool] $State): An error occurred while setting the Pure Direct status of the receiver.'+"`n"+$_)
+        }
+        $this.SetState()
+    }
+
 
 }
