@@ -26,3 +26,11 @@ $R.SetTreble(15) # Set the Treble level to 1.5dB - ranged as -60 to +60
 $R.SetPureDirect($true) # Turn on Pure Direct mode
 $R.SetPureDirect($false) # Turn off Pure Direct mode
 
+$R.SetEnhancer($true) # Turn enhancer mode on
+$R.SetEnhancer($false) # Turn enhancer mode off
+
+$R.SetAdaptiveDRC($true) # Turn Adaptive DRC on
+$R.SetAdaptiveDRC($false) # Turn Adaptive DRC off
+
+$R.SetCinema3DDSP($true) # Turn Cinema 3D DSP on
+$R.SetCinema3DDSP($false) # Turn Cinema 3D DSP off

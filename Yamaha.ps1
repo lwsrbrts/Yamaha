@@ -41,7 +41,12 @@ Class Yamaha : ErrorHandler {
     [ValidateRange(-60,60)][int] $SubTrimLevel
     [ValidateRange(-60,60)][int] $BassLevel
     [ValidateRange(-60,60)][int] $TrebleLevel
+    [ValidateRange(0,3)][int] $DialogueLevel
+    [ValidateRange(0,5)][int] $DialogueLift
     [bool] $PureDirectOn
+    [bool] $EnhancerOn
+    [bool] $Cinema3DDSPMode
+    [bool] $AdaptiveDRC
     [System.Xml.XmlDocument] $Status
     [psobject] $Inputs
 
@@ -63,6 +68,7 @@ Class Yamaha : ErrorHandler {
         {
             'Off' { Return $false}
             'On'  {Return $true}
+            'Auto' {Return $true}
         }
         Return $false
     }
@@ -78,6 +84,11 @@ Class Yamaha : ErrorHandler {
         $this.BassLevel = $this.Status.YAMAHA_AV.Main_Zone.Basic_Status.Sound_Video.Tone.Bass.Val
         $this.TrebleLevel = $this.Status.YAMAHA_AV.Main_Zone.Basic_Status.Sound_Video.Tone.Treble.Val
         $this.PureDirectOn = $this.ConvertState($this.Status.YAMAHA_AV.Main_Zone.Basic_Status.Sound_Video.Pure_Direct.Mode)
+        $this.DialogueLevel = $this.Status.YAMAHA_AV.Main_Zone.Basic_Status.Sound_Video.Dialogue_Adjust.Dialogue_Lvl
+        $this.DialogueLift = $this.Status.YAMAHA_AV.Main_Zone.Basic_Status.Sound_Video.Dialogue_Adjust.Dialogue_Lift
+        $this.EnhancerOn = $this.ConvertState($this.Status.YAMAHA_AV.Main_Zone.Basic_Status.Surround.Program_Sel.Current.Enhancer)
+        $this.Cinema3DDSPMode = $this.ConvertState($this.Status.YAMAHA_AV.Main_Zone.Basic_Status.Surround._3D_Cinema_DSP)
+        $this.AdaptiveDRC = $this.ConvertState($this.Status.YAMAHA_AV.Main_Zone.Basic_Status.Sound_Video.Adaptive_DRC)
         $this.GetInputs()
     }
 
@@ -306,6 +317,132 @@ Class Yamaha : ErrorHandler {
         }
         Catch {
             $this.ReturnError('SetPureDirect([bool] $State): An error occurred while setting the Pure Direct status of the receiver.'+"`n"+$_)
+        }
+        $this.SetState()
+    }
+
+    [void] SetDialogueLevel([int] $DialogueLevel) {
+        # Refresh the state of the receiver, who knows what's changed.
+        $this.SetState()
+
+        If ($this.PowerOn -eq $false) { $this.ReturnWarning("The receiver must be powered on first."); Return }
+        $this.DialogueLevel = $DialogueLevel
+
+        $Body = "<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Sound_Video><Dialogue_Adjust><Dialogue_Lvl>$($this.DialogueLevel)</Dialogue_Lvl></Dialogue_Adjust></Sound_Video></Main_Zone></YAMAHA_AV>"
+
+        Try {
+            $State = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+        }
+        Catch {
+            $this.ReturnError('SetDialogueLevel([int] $DialogueLevel): An error occurred while setting the dialogue level.'+"`n"+$_)
+        }
+        $this.SetState()
+    }
+
+    [void] SetDialogueLift([int] $DialogueLift) {
+        # Refresh the state of the receiver, who knows what's changed.
+        $this.SetState()
+
+        If ($this.PowerOn -eq $false) { $this.ReturnWarning("The receiver must be powered on first."); Return }
+        $this.DialogueLift = $DialogueLift
+
+        $Body = "<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Sound_Video><Dialogue_Adjust><Dialogue_Lift>$($this.DialogueLift)</Dialogue_Lift></Dialogue_Adjust></Sound_Video></Main_Zone></YAMAHA_AV>"
+
+        Try {
+            $State = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+        }
+        Catch {
+            $this.ReturnError('SetDialogueLift([int] $DialogueLift: An error occurred while setting the dialogue level.'+"`n"+$_)
+        }
+        $this.SetState()
+    }
+
+    # Set Enhancer on or off ($true or $false)
+    [void] SetEnhancer([bool] $State) {
+        # Refresh the state of the receiver, who knows what's changed.
+        $this.SetState()
+        If ($this.PowerOn -eq $false) { $this.ReturnWarning("The receiver must be powered on first."); Return }
+
+        $Body = $null
+
+        Switch ($State) {
+            $true {
+                If ($this.EnhancerOn -eq $true) { $this.ReturnWarning("Enhancer is already on."); Return }
+                Else { $Body = "<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Surround><Program_Sel><Current><Enhancer>On</Enhancer></Current></Program_Sel></Surround></Main_Zone></YAMAHA_AV>" }
+                Break
+            }
+            $false {
+                If ($this.EnhancerOn -eq $false) { $this.ReturnWarning("Enhancer is already off."); Return }
+                Else { $Body = "<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Surround><Program_Sel><Current><Enhancer>Off</Enhancer></Current></Program_Sel></Surround></Main_Zone></YAMAHA_AV>" }
+                Break
+            }
+        }
+
+        Try {
+            $Result = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+        }
+        Catch {
+            $this.ReturnError('SetEnhancer([bool] $State): An error occurred while setting the enhancer state on the receiver.'+"`n"+$_)
+        }
+        $this.SetState()
+    }
+
+    # Set Cinema 3D DSP mode on or off ($true or $false)
+    [void] SetCinema3DDSP([bool] $State) {
+        # Refresh the state of the receiver, who knows what's changed.
+        $this.SetState()
+        If ($this.PowerOn -eq $false) { $this.ReturnWarning("The receiver must be powered on first."); Return }
+
+        $Body = $null
+
+        Switch ($State) {
+            $true {
+                If ($this.Cinema3DDSPMode -eq $true) { $this.ReturnWarning("Cinema 3D DSP mode is already on."); Return }
+                Else { $Body = "<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Surround><_3D_Cinema_DSP>Auto</_3D_Cinema_DSP></Surround></Main_Zone></YAMAHA_AV>" }
+                Break
+            }
+            $false {
+                If ($this.Cinema3DDSPMode -eq $false) { $this.ReturnWarning("Cinema 3D DSP mode is already off."); Return }
+                Else { $Body = "<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Surround><_3D_Cinema_DSP>Off</_3D_Cinema_DSP></Surround></Main_Zone></YAMAHA_AV>" }
+                Break
+            }
+        }
+
+        Try {
+            $Result = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+        }
+        Catch {
+            $this.ReturnError('SetCinema3DDSP([bool] $State): An error occurred while setting the Cinema 3D DSP mode on the receiver.'+"`n"+$_)
+        }
+        $this.SetState()
+    }
+
+    # Set Adaptive DRC on or off ($true or $false)
+    [void] SetAdaptiveDRC([bool] $State) {
+        # Refresh the state of the receiver, who knows what's changed.
+        $this.SetState()
+        If ($this.PowerOn -eq $false) { $this.ReturnWarning("The receiver must be powered on first."); Return }
+
+        $Body = $null
+
+        Switch ($State) {
+            $true {
+                If ($this.AdaptiveDRC -eq $true) { $this.ReturnWarning("Adaptive DRC is already on."); Return }
+                Else { $Body = "<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Sound_Video><Adaptive_DRC>Auto</Adaptive_DRC></Sound_Video></Main_Zone></YAMAHA_AV>" }
+                Break
+            }
+            $false {
+                If ($this.AdaptiveDRC -eq $false) { $this.ReturnWarning("Adaptive DRC is already off."); Return }
+                Else { $Body = "<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Sound_Video><Adaptive_DRC>Off</Adaptive_DRC></Sound_Video></Main_Zone></YAMAHA_AV>" }
+                Break
+            }
+        }
+
+        Try {
+            $Result = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+        }
+        Catch {
+            $this.ReturnError('SetAdaptiveDRC([bool] $State): An error occurred while setting Adaptive DRC mode on the receiver.'+"`n"+$_)
         }
         $this.SetState()
     }
