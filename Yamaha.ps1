@@ -103,10 +103,11 @@ Class Yamaha : ErrorHandler {
 
     hidden [System.Xml.XmlDocument] GetNetworkStandbyStatus() {
         $Body = '<YAMAHA_AV cmd="GET"><System><Misc><Network><Network_Standby>GetParam</Network_Standby></Network></Misc></System></YAMAHA_AV>'
-        $State = $null
+        $Result = $null
         Try {
-            $State = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
-            Return $State
+            $Result = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+            If ($Result.YAMAHA_AV.RC -gt 0) { Throw "An error occurred during the request. `n$($Result.OuterXml)" }
+            Else { Return $Result }
         }
         Catch {
             $this.ReturnError('GetNetworkStandbyStatus(): An error occurred while getting the state of the receiver.'+"`n"+$_)
@@ -116,10 +117,11 @@ Class Yamaha : ErrorHandler {
 
     hidden [System.Xml.XmlDocument] GetMainZoneStatus() {
         $Body = '<YAMAHA_AV cmd="GET"><Main_Zone><Basic_Status>GetParam</Basic_Status></Main_Zone></YAMAHA_AV>'
-        $State = $null
+        $Result = $null
         Try {
-            $State = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
-            Return $State
+            $Result = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+            If ($Result.YAMAHA_AV.RC -gt 0) { Throw "An error occurred during the request. `n$($Result.OuterXml)" }
+            Else { Return $Result }
         }
         Catch {
             $this.ReturnError('GetMainZoneStatus(): An error occurred while getting the state of the receiver.'+"`n"+$_)
@@ -148,7 +150,8 @@ Class Yamaha : ErrorHandler {
         }
 
         Try {
-            $State = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+            $Result = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+            If ($Result.YAMAHA_AV.RC -gt 0) { Throw "An error occurred during the request. `n$($Result.OuterXml)" }
         }
         Catch {
             $this.ReturnError('SetPower([bool] $State): An error occurred while setting the power of the receiver.'+"`n"+$_)
@@ -178,7 +181,8 @@ Class Yamaha : ErrorHandler {
         }
 
         Try {
-            $State = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+            $Result = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+            If ($Result.YAMAHA_AV.RC -gt 0) { Throw "An error occurred during the request. `n$($Result.OuterXml)" }
         }
         Catch {
             $this.ReturnError('SetMute([bool] $State): An error occurred while setting the mute status of the receiver.'+"`n"+$_)
@@ -199,7 +203,8 @@ Class Yamaha : ErrorHandler {
         $State = $null
 
         Try {
-            $State = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+            $Result = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+            If ($Result.YAMAHA_AV.RC -gt 0) { Throw "An error occurred during the request. `n$($Result.OuterXml)" }
         }
         Catch {
             $this.ReturnError('SetVolume([int] $VolumeLevel): An error occurred while setting the volume.'+"`n"+$_)
@@ -210,17 +215,18 @@ Class Yamaha : ErrorHandler {
     hidden [void] GetInputs() {
         # Refresh the state of the receiver, who knows what's changed.
         $Body = '<YAMAHA_AV cmd="GET"><System><Config>GetParam</Config></System></YAMAHA_AV>'
-        $State = $null
+        $Result = $null
 
         Try {
-            $State = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+            $Result = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+            If ($Result.YAMAHA_AV.RC -gt 0) { Throw "An error occurred during the request. `n$($Result.OuterXml)" }
         }
         Catch {
             $this.ReturnError('GetInputs(): An error occurred while getting inputs.'+"`n"+$_)
         }
 
         $AVInputs = @{}
-        Foreach ($AVInput in $State.YAMAHA_AV.System.Config.Name.Input.ChildNodes) {
+        Foreach ($AVInput in $Result.YAMAHA_AV.System.Config.Name.Input.ChildNodes) {
             $AVInputs.Add($AVInput.Name.Replace('_',''), $AVInput.InnerText) # Clean up the input names, they don't have underscores!
         }
 
@@ -235,7 +241,8 @@ Class Yamaha : ErrorHandler {
         $Body = "<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Input><Input_Sel>$InputName</Input_Sel></Input></Main_Zone></YAMAHA_AV>"
 
         Try {
-            $State = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+            $Result = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+            If ($Result.YAMAHA_AV.RC -gt 0) { Throw "An error occurred during the request. `n$($Result.OuterXml)" }
         }
         Catch {
             $this.ReturnError('SetInput([string] $InputName): An error occurred while setting the input.'+"`n"+$_)
@@ -254,7 +261,8 @@ Class Yamaha : ErrorHandler {
         $Body = "'<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Volume><Subwoofer_Trim><Val>$($this.SubTrimLevel)</Val><Exp>1</Exp><Unit>dB</Unit></Subwoofer_Trim></Volume></Main_Zone></YAMAHA_AV>"
 
         Try {
-            $State = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+            $Result = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+            If ($Result.YAMAHA_AV.RC -gt 0) { Throw "An error occurred during the request. `n$($Result.OuterXml)" }
         }
         Catch {
             $this.ReturnError('SetSubTrim([int] $SubTrimLevel): An error occurred while setting the subwoofer trim level.'+"`n"+$_)
@@ -273,7 +281,8 @@ Class Yamaha : ErrorHandler {
         $Body = "'<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Sound_Video><Tone><Bass><Val>$($this.BassLevel)</Val><Exp>1</Exp><Unit>dB</Unit></Bass></Tone></Sound_Video></Main_Zone></YAMAHA_AV>"
 
         Try {
-            $State = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+            $Result = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+            If ($Result.YAMAHA_AV.RC -gt 0) { Throw "An error occurred during the request. `n$($Result.OuterXml)" }
         }
         Catch {
             $this.ReturnError('SetBass([int] $BassLevel): An error occurred while setting the bass level.'+"`n"+$_)
@@ -292,7 +301,8 @@ Class Yamaha : ErrorHandler {
         $Body = "'<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Sound_Video><Tone><Treble><Val>$($this.TrebleLevel)</Val><Exp>1</Exp><Unit>dB</Unit></Treble></Tone></Sound_Video></Main_Zone></YAMAHA_AV>"
 
         Try {
-            $State = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+            $Result = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+            If ($Result.YAMAHA_AV.RC -gt 0) { Throw "An error occurred during the request. `n$($Result.OuterXml)" }
         }
         Catch {
             $this.ReturnError('SetTreble([int] $TrebleLevel): An error occurred while setting the treble level.'+"`n"+$_)
@@ -323,6 +333,7 @@ Class Yamaha : ErrorHandler {
 
         Try {
             $Result = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+            If ($Result.YAMAHA_AV.RC -gt 0) { Throw "An error occurred during the request. `n$($Result.OuterXml)" }
         }
         Catch {
             $this.ReturnError('SetPureDirect([bool] $State): An error occurred while setting the Pure Direct status of the receiver.'+"`n"+$_)
@@ -340,7 +351,8 @@ Class Yamaha : ErrorHandler {
         $Body = "<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Sound_Video><Dialogue_Adjust><Dialogue_Lvl>$($this.DialogueLevel)</Dialogue_Lvl></Dialogue_Adjust></Sound_Video></Main_Zone></YAMAHA_AV>"
 
         Try {
-            $State = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+            $Result = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+            If ($Result.YAMAHA_AV.RC -gt 0) { Throw "An error occurred during the request. `n$($Result.OuterXml)" }
         }
         Catch {
             $this.ReturnError('SetDialogueLevel([int] $DialogueLevel): An error occurred while setting the dialogue level.'+"`n"+$_)
@@ -358,7 +370,8 @@ Class Yamaha : ErrorHandler {
         $Body = "<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Sound_Video><Dialogue_Adjust><Dialogue_Lift>$($this.DialogueLift)</Dialogue_Lift></Dialogue_Adjust></Sound_Video></Main_Zone></YAMAHA_AV>"
 
         Try {
-            $State = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+            $Result = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+            If ($Result.YAMAHA_AV.RC -gt 0) { Throw "An error occurred during the request. `n$($Result.OuterXml)" }
         }
         Catch {
             $this.ReturnError('SetDialogueLift([int] $DialogueLift: An error occurred while setting the dialogue level.'+"`n"+$_)
@@ -389,6 +402,7 @@ Class Yamaha : ErrorHandler {
 
         Try {
             $Result = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+            If ($Result.YAMAHA_AV.RC -gt 0) { Throw "An error occurred during the request. `n$($Result.OuterXml)" }
         }
         Catch {
             $this.ReturnError('SetEnhancer([bool] $State): An error occurred while setting the enhancer state on the receiver.'+"`n"+$_)
@@ -419,6 +433,7 @@ Class Yamaha : ErrorHandler {
 
         Try {
             $Result = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+            If ($Result.YAMAHA_AV.RC -gt 0) { Throw "An error occurred during the request. `n$($Result.OuterXml)" }
         }
         Catch {
             $this.ReturnError('SetCinema3DDSP([bool] $State): An error occurred while setting the Cinema 3D DSP mode on the receiver.'+"`n"+$_)
@@ -449,6 +464,7 @@ Class Yamaha : ErrorHandler {
 
         Try {
             $Result = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+            If ($Result.YAMAHA_AV.RC -gt 0) { Throw "An error occurred during the request. `n$($Result.OuterXml)" }
         }
         Catch {
             $this.ReturnError('SetAdaptiveDRC([bool] $State): An error occurred while setting Adaptive DRC mode on the receiver.'+"`n"+$_)
@@ -458,13 +474,13 @@ Class Yamaha : ErrorHandler {
 
     # Send actions to the receiver (like using the remote)
     [void] SendAction([CursorControl] $Action) {
-        # Refresh the state of the receiver, who knows what's changed.
         If ($this.PowerOn -eq $false) { $this.ReturnWarning("The receiver must be powered on first."); Return }
 
         $Body = "<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Cursor_Control><Cursor>$Action</Cursor></Cursor_Control></Main_Zone></YAMAHA_AV>"
 
         Try {
             $Result = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
+            If ($Result.YAMAHA_AV.RC -gt 0) { Throw "An error occurred during the request. `n$($Result.OuterXml)" }
         }
         Catch {
             $this.ReturnError('SendAction([CursorControl] $Action): An error occurred while sending the action to the receiver.'+"`n"+$_)
