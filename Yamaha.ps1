@@ -199,7 +199,7 @@ Class Yamaha : ErrorHandler {
         If ($VolumeLevel % 5 -ne 0) { $this.ReturnWarning("VolumeLevel must be divisible by 5."); Return }
         $this.VolumeLevel = $VolumeLevel.value__
 
-        $Body = "'<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Volume><Lvl><Val>$($VolumeLevel.value__)</Val><Exp>1</Exp><Unit>dB</Unit></Lvl></Volume></Main_Zone></YAMAHA_AV>"
+        $Body = "<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Volume><Lvl><Val>$($VolumeLevel.value__)</Val><Exp>1</Exp><Unit>dB</Unit></Lvl></Volume></Main_Zone></YAMAHA_AV>"
         $State = $null
 
         Try {
@@ -258,7 +258,7 @@ Class Yamaha : ErrorHandler {
         If ($SubTrimLevel % 5 -ne 0) { $this.ReturnWarning("SubTrimLevel must be divisible by 5."); Return }
         $this.SubTrimLevel = $SubTrimLevel
 
-        $Body = "'<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Volume><Subwoofer_Trim><Val>$($this.SubTrimLevel)</Val><Exp>1</Exp><Unit>dB</Unit></Subwoofer_Trim></Volume></Main_Zone></YAMAHA_AV>"
+        $Body = "<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Volume><Subwoofer_Trim><Val>$($this.SubTrimLevel)</Val><Exp>1</Exp><Unit>dB</Unit></Subwoofer_Trim></Volume></Main_Zone></YAMAHA_AV>"
 
         Try {
             $Result = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
@@ -278,7 +278,7 @@ Class Yamaha : ErrorHandler {
         If ($BassLevel % 5 -ne 0) { $this.ReturnWarning("BassLevel must be divisible by 5."); Return }
         $this.BassLevel = $BassLevel
 
-        $Body = "'<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Sound_Video><Tone><Bass><Val>$($this.BassLevel)</Val><Exp>1</Exp><Unit>dB</Unit></Bass></Tone></Sound_Video></Main_Zone></YAMAHA_AV>"
+        $Body = "<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Sound_Video><Tone><Bass><Val>$($this.BassLevel)</Val><Exp>1</Exp><Unit>dB</Unit></Bass></Tone></Sound_Video></Main_Zone></YAMAHA_AV>"
 
         Try {
             $Result = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
@@ -298,7 +298,7 @@ Class Yamaha : ErrorHandler {
         If ($TrebleLevel % 5 -ne 0) { $this.ReturnWarning("TrebleLevel must be divisible by 5."); Return }
         $this.TrebleLevel = $TrebleLevel
 
-        $Body = "'<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Sound_Video><Tone><Treble><Val>$($this.TrebleLevel)</Val><Exp>1</Exp><Unit>dB</Unit></Treble></Tone></Sound_Video></Main_Zone></YAMAHA_AV>"
+        $Body = "<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Sound_Video><Tone><Treble><Val>$($this.TrebleLevel)</Val><Exp>1</Exp><Unit>dB</Unit></Treble></Tone></Sound_Video></Main_Zone></YAMAHA_AV>"
 
         Try {
             $Result = Invoke-RestMethod -Method Post -Uri "http://$($this.IPAddress)/YamahaRemoteControl/ctrl" -ContentType 'text/xml' -Body $Body
@@ -321,12 +321,12 @@ Class Yamaha : ErrorHandler {
         Switch ($State) {
             $true {
                 If ($this.PureDirectOn -eq $true) { $this.ReturnWarning("Pure Direct mode is already on."); Return }
-                Else { $Body = "'<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Sound_Video><Pure_Direct><Mode>On</Mode></Pure_Direct></Sound_Video></Main_Zone></YAMAHA_AV>" }
+                Else { $Body = "<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Sound_Video><Pure_Direct><Mode>On</Mode></Pure_Direct></Sound_Video></Main_Zone></YAMAHA_AV>" }
                 Break
             }
             $false {
                 If ($this.PureDirectOn -eq $false) { $this.ReturnWarning("Pure Direct mode is already off."); Return }
-                Else { $Body = "'<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Sound_Video><Pure_Direct><Mode>Off</Mode></Pure_Direct></Sound_Video></Main_Zone></YAMAHA_AV>" }
+                Else { $Body = "<YAMAHA_AV cmd=`"PUT`"><Main_Zone><Sound_Video><Pure_Direct><Mode>Off</Mode></Pure_Direct></Sound_Video></Main_Zone></YAMAHA_AV>" }
                 Break
             }
         }
