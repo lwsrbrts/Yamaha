@@ -23,6 +23,9 @@ $R.SetSubTrim(-30) # Set the subwoofer trim level to -3.0dB - ranged as -60 to +
 $R.SetBass(20) # Set the Bass level to 2.0dB - ranged as -60 to +60 (-6.0db to +6.0dB)
 $R.SetTreble(15) # Set the Treble level to 1.5dB - ranged as -60 to +60 (-6.0db to +6.0dB)
 
+$R.SetDialogueLevel(3) # Set dialogue level
+$R.SetDialogueLift(5) # Set dialogue lift level
+
 $R.SetPureDirect($true) # Turn on Pure Direct mode
 $R.SetPureDirect($false) # Turn off Pure Direct mode
 
